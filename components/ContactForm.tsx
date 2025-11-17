@@ -1,3 +1,60 @@
+// ===================================================================================
+// PASSO 1: CÓDIGO DA SUA NOVA API - GOOGLE APPS SCRIPT
+// Copie e cole este código no seu projeto do Google Apps Script.
+// 
+// INSTRUÇÕES:
+// 1. Abra sua Planilha Google.
+// 2. Vá em `Extensões` > `Apps Script`.
+// 3. Apague todo o código que estiver lá e cole o código abaixo.
+// 4. Clique em `Implantar` (canto superior direito) > `Nova implantação`.
+// 5. No pop-up, clique no ícone de engrenagem (`Selecione o tipo`) e escolha `App da Web`.
+// 6. Em `Quem pode acessar`, mude para `Qualquer pessoa`.
+// 7. Clique em `Implantar`. Autorize o acesso quando solicitado.
+// 8. COPIE a `URL do app da Web` fornecida. Você vai colar essa URL no PASSO 2.
+// ===================================================================================
+/*
+function doPost(e) {
+  try {
+    // Garanta que sua aba na planilha se chama "Leads"
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Leads');
+
+    // Pega os dados do formulário que vieram via FormData
+    const data = e.parameter;
+
+    // Adiciona uma nova linha com os dados
+    sheet.appendRow([
+      new Date(),       // Coluna A: Timestamp
+      data.name,        // Coluna B: Nome
+      data.email,       // Coluna C: Email
+      data.phone,       // Coluna D: Telefone
+      data.property,    // Coluna E: Imóvel
+      data.message      // Coluna F: Mensagem
+    ]);
+
+    // Prepara uma resposta de SUCESSO. Isso é crucial para o site saber que deu certo.
+    const response = {
+      status: "success",
+      message: "Dados recebidos com sucesso!"
+    };
+
+    // Retorna a resposta no formato JSON. O Google cuida do CORS para nós aqui.
+    return ContentService
+      .createTextOutput(JSON.stringify(response))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    // Se algo der errado, retorna uma mensagem de ERRO.
+    const errorResponse = {
+      status: "error",
+      message: "Ocorreu um erro no servidor: " + error.message
+    };
+    
+    return ContentService
+      .createTextOutput(JSON.stringify(errorResponse))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+*/
 
 import React, { useState, useEffect, forwardRef } from 'react';
 import { Property } from '../types';
@@ -20,7 +77,6 @@ export const ContactForm = forwardRef<HTMLDivElement, ContactFormProps>(({ prope
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
   
-  // When the selectedProperty prop changes (e.g., from a property card click), update the form data
   useEffect(() => {
     setFormData(prev => ({ ...prev, property: selectedProperty }));
   }, [selectedProperty]);
@@ -36,39 +92,44 @@ export const ContactForm = forwardRef<HTMLDivElement, ContactFormProps>(({ prope
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setStatus('loading');
+    setStatusMessage('');
 
-    // !!! IMPORTANT: Replace this with your own Google Apps Script Web App URL !!!
-    const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE';
-    
-    if (scriptURL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
-      setStatus('error');
-      setStatusMessage('Erro: A URL do Google Apps Script não foi configurada. Siga as instruções no código.');
-      return;
-    }
+    // ===================================================================================
+    // PASSO 2: CONECTE SEU SITE À SUA API
+    // Cole a URL que você copiou do Google Apps Script aqui.
+    // ===================================================================================
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwOpxC0US-serZt8mEEjc5Md3WZY_K7dStJz4Z4OwjN81cBBwiwuPnO5yFb-ity3crj/exec';
+
+    // FIX: Removed the redundant URL check that caused a TypeScript error.
+    const form = new FormData();
+    form.append('name', formData.name);
+    form.append('email', formData.email);
+    form.append('phone', formData.phone);
+    form.append('property', formData.property);
+    form.append('message', formData.message);
 
     try {
       const response = await fetch(scriptURL, {
         method: 'POST',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: form,
       });
-
+      
       const result = await response.json();
 
-      if (result.result === 'success') {
+      if (result.status === 'success') {
         setStatus('success');
         setStatusMessage('Obrigado! Sua mensagem foi enviada. Entrarei em contato em breve.');
         setFormData({ name: '', email: '', phone: '', property: '', message: '' });
+        setSelectedProperty('');
       } else {
-        throw new Error(result.error || 'Ocorreu um erro desconhecido.');
+        throw new Error(result.message || 'Erro desconhecido retornado pela API.');
       }
+
     } catch (error) {
-      console.error('Error!', error);
+      console.error('Ocorreu um erro inesperado:', error);
       setStatus('error');
-      setStatusMessage('Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      setStatusMessage(`Falha ao enviar. Verifique se a URL da API está correta e tente novamente.`);
     }
   };
 
@@ -83,49 +144,6 @@ export const ContactForm = forwardRef<HTMLDivElement, ContactFormProps>(({ prope
             </p>
           </div>
           <div className="bg-gray-50 p-8 rounded-xl shadow-lg border border-gray-200">
-            {/* INSTRUCTIONS FOR GOOGLE SHEETS INTEGRATION */}
-            <div className="mb-6 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700 rounded-md">
-              <h4 className="font-bold">Instruções para o Desenvolvedor:</h4>
-              <ol className="list-decimal list-inside text-sm mt-2">
-                <li>Crie uma nova Planilha Google (Google Sheet).</li>
-                <li>No menu, vá em "Extensões" {'>'} "Apps Script".</li>
-                <li>Apague o código padrão e cole o código que está nos comentários deste arquivo.</li>
-                <li>Clique em "Implantar" {'>'} "Nova implantação".</li>
-                <li>Selecione o tipo como "App da Web".</li>
-                <li>Em "Quem pode acessar", selecione "Qualquer pessoa".</li>
-                <li>Clique em "Implantar". Autorize as permissões necessárias.</li>
-                <li>Copie a URL do app da Web e cole na constante `scriptURL` neste arquivo.</li>
-              </ol>
-            </div>
-            {/*
-              // GOOGLE APPS SCRIPT CODE TO PASTE
-              function doPost(e) {
-                try {
-                  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Leads") || SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-                  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-                  if (headers.length === 0 || headers[0] === "") {
-                    sheet.getRange(1, 1, 1, 6).setValues([['Timestamp', 'Nome', 'Email', 'Telefone', 'Imóvel de Interesse', 'Mensagem']]);
-                  }
-                  
-                  var data = JSON.parse(e.postData.contents);
-                  var timestamp = new Date();
-
-                  sheet.appendRow([
-                    timestamp,
-                    data.name,
-                    data.email,
-                    data.phone,
-                    data.property,
-                    data.message
-                  ]);
-
-                  return ContentService.createTextOutput(JSON.stringify({ "result": "success" })).setMimeType(ContentService.MimeType.JSON);
-                } catch (error) {
-                  return ContentService.createTextOutput(JSON.stringify({ "result": "error", "error": error.toString() })).setMimeType(ContentService.MimeType.JSON);
-                }
-              }
-            */}
-
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
@@ -158,10 +176,9 @@ export const ContactForm = forwardRef<HTMLDivElement, ContactFormProps>(({ prope
                 </button>
               </div>
             </form>
-            {status !== 'idle' && (
+            {status !== 'idle' && status !== 'loading' && (
               <div className={`mt-6 p-4 rounded-lg text-center ${
-                status === 'success' ? 'bg-green-100 text-green-800' :
-                status === 'error' ? 'bg-red-100 text-red-800' : ''
+                status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
               }`}>
                 {statusMessage}
               </div>
