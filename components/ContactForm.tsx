@@ -56,7 +56,7 @@ function doPost(e) {
 }
 */
 
-import React, { useState, useEffect, forwardRef } from 'react';
+import React, { useState, forwardRef } from 'react';
 import { Property } from '../types';
 
 interface ContactFormProps {
@@ -66,27 +66,26 @@ interface ContactFormProps {
 }
 
 export const ContactForm = forwardRef<HTMLDivElement, ContactFormProps>(({ properties, selectedProperty, setSelectedProperty }, ref) => {
+  // O estado do formulário agora gerencia apenas os campos que não são controlados pelo pai.
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    property: selectedProperty,
     message: '',
   });
 
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
-  
-  useEffect(() => {
-    setFormData(prev => ({ ...prev, property: selectedProperty }));
-  }, [selectedProperty]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    // O campo 'property' é controlado pelo componente pai através de props.
     if (name === 'property') {
       setSelectedProperty(value);
+    } else {
+      // Outros campos são gerenciados pelo estado local.
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -100,12 +99,11 @@ export const ContactForm = forwardRef<HTMLDivElement, ContactFormProps>(({ prope
     // ===================================================================================
     const scriptURL = 'https://script.google.com/macros/s/AKfycbwOpxC0US-serZt8mEEjc5Md3WZY_K7dStJz4Z4OwjN81cBBwiwuPnO5yFb-ity3crj/exec';
 
-    // FIX: Removed the redundant URL check that caused a TypeScript error.
     const form = new FormData();
     form.append('name', formData.name);
     form.append('email', formData.email);
     form.append('phone', formData.phone);
-    form.append('property', formData.property);
+    form.append('property', selectedProperty); // Usa a prop 'selectedProperty' diretamente.
     form.append('message', formData.message);
 
     try {
@@ -119,7 +117,9 @@ export const ContactForm = forwardRef<HTMLDivElement, ContactFormProps>(({ prope
       if (result.status === 'success') {
         setStatus('success');
         setStatusMessage('Obrigado! Sua mensagem foi enviada. Entrarei em contato em breve.');
-        setFormData({ name: '', email: '', phone: '', property: '', message: '' });
+        // Limpa apenas os campos do estado local.
+        setFormData({ name: '', email: '', phone: '', message: '' });
+        // Limpa a propriedade selecionada no componente pai.
         setSelectedProperty('');
       } else {
         throw new Error(result.message || 'Erro desconhecido retornado pela API.');
@@ -128,8 +128,7 @@ export const ContactForm = forwardRef<HTMLDivElement, ContactFormProps>(({ prope
     } catch (error) {
       console.error('Ocorreu um erro inesperado:', error);
       setStatus('error');
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      setStatusMessage(`Falha ao enviar. Verifique se a URL da API está correta e tente novamente.`);
+      setStatusMessage(`Falha ao enviar. Verifique sua conexão e a URL da API, e tente novamente.`);
     }
   };
 
@@ -161,7 +160,7 @@ export const ContactForm = forwardRef<HTMLDivElement, ContactFormProps>(({ prope
               </div>
               <div>
                 <label htmlFor="property" className="block text-sm font-medium text-gray-700 mb-1">Imóvel de Interesse</label>
-                <select id="property" name="property" value={formData.property} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white">
+                <select id="property" name="property" value={selectedProperty} onChange={handleChange} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 bg-white">
                   <option value="" disabled>Selecione um imóvel</option>
                   {properties.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                 </select>
@@ -189,3 +188,5 @@ export const ContactForm = forwardRef<HTMLDivElement, ContactFormProps>(({ prope
     </section>
   );
 });
+
+ContactForm.displayName = 'ContactForm';
