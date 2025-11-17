@@ -37,7 +37,7 @@ const properties: Property[] = [
     address: "Av. Beira Mar Norte, 1011, Agronômica, Florianópolis - SC",
     description: "Desfrute de um pôr do sol espetacular todos os dias da sua varanda. Apartamento de alto padrão com 3 suítes, área de lazer completa e localização privilegiada.",
     price: "R$ 1.850.000,00",
-    image: "https://images.unsplash.com/photo-1593348987823-45f5b2f56742?q=80&w=1470&auto=format&fit=crop"
+    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1470&auto=format&fit=crop"
   },
 ];
 
