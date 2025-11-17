@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Property } from '../types';
 
@@ -13,7 +12,7 @@ const PropertyCard: React.FC<{ property: Property, onInterestClick: (propertyNam
     <div className="p-6 flex flex-col flex-grow">
       <h3 className="text-xl font-bold text-gray-900 mb-2">{property.name}</h3>
       <p className="text-sm text-gray-500 mb-4 flex items-center">
-        <i className="fas fa-map-marker-alt mr-2 text-blue-500"></i>
+        <i className="fas fa-map-marker-alt mr-2 text-blue-600"></i>
         {property.address}
       </p>
       <p className="text-gray-600 mb-4 flex-grow">{property.description}</p>

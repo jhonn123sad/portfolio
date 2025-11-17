@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { AgentProfile } from './components/AgentProfile';
 import { PropertyList } from './components/PropertyList';

@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface AgentProfileProps {
@@ -21,7 +20,7 @@ export const AgentProfile: React.FC<AgentProfileProps> = ({ onContactClick }) =>
             <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight mb-4">
               Seu Próximo Lar Está Aqui.
             </h1>
-            <p className="text-lg sm:text-xl text-blue-700 font-semibold mb-6">
+            <p className="text-lg sm:text-xl text-blue-600 font-semibold mb-6">
               Encontre o Imóvel dos Seus Sonhos em Florianópolis.
             </p>
             <p className="text-gray-600 mb-8 leading-relaxed">
